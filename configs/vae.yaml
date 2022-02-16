@@ -1,11 +1,11 @@
 model_params:
-  name: 'VanillaVAE'
+  name: 'VAE_REP'
   in_channels: 3
   latent_dim: 128
 
 
 data_params:
-  data_path: "Data/"
+  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 64
@@ -21,9 +21,9 @@ exp_params:
 
 trainer_params:
   gpus: [1]
-  max_epochs: 100
+  max_epochs: 50
 
 logging_params:
-  save_dir: "logs/"
-  name: "VanillaVAE"
+  save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
+  name: "vae_rep_160222"
   
