@@ -35,7 +35,7 @@ class VAE_REP(BaseVAE):
         self.encoder = nn.Sequential(*modules)
         self.fc_mu = nn.Linear(hidden_dims[-1]*4, latent_dim)
         self.fc_var = nn.Linear(hidden_dims[-1]*4, latent_dim)
-        self.fc_blond = nn.Linear(hidden_dims[-1]*4, latent_dim)
+        self.fc_blond = nn.Linear(hidden_dims[-1]*4, 1)
 
 
         # Build Decoder
@@ -121,7 +121,7 @@ class VAE_REP(BaseVAE):
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
         mu, log_var, blond = self.encode(input)
         z = self.reparameterize(mu, log_var)
-        return  [self.decode(z), input, mu, log_var, blond]
+        return [self.decode(z), input, mu, log_var, blond]
 
     def loss_function(self,
                       *args,
@@ -139,7 +139,7 @@ class VAE_REP(BaseVAE):
         log_var = args[3]
         blond_pred = args[4]
 
-        blond_hair_labels = kwargs['labels']
+        blond_hair_labels = kwargs['labels'][:, 9].unsqueeze(1).float()
         criterion = torch.nn.BCEWithLogitsLoss()
 
         kld_weight = kwargs['M_N'] # Account for the minibatch samples from the dataset
