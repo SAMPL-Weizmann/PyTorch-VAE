@@ -35,6 +35,7 @@ class VAE_REP(BaseVAE):
         self.encoder = nn.Sequential(*modules)
         self.fc_mu = nn.Linear(hidden_dims[-1]*4, latent_dim)
         self.fc_var = nn.Linear(hidden_dims[-1]*4, latent_dim)
+        self.fc_blond = nn.Linear(hidden_dims[-1]*4, latent_dim)
 
 
         # Build Decoder
@@ -88,8 +89,9 @@ class VAE_REP(BaseVAE):
         # of the latent Gaussian distribution
         mu = self.fc_mu(result)
         log_var = self.fc_var(result)
+        blond = self.fc_blond(result)
 
-        return [mu, log_var]
+        return [mu, log_var, blond]
 
     def decode(self, z: Tensor) -> Tensor:
         """
@@ -117,9 +119,9 @@ class VAE_REP(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
-        mu, log_var = self.encode(input)
+        mu, log_var, blond = self.encode(input)
         z = self.reparameterize(mu, log_var)
-        return  [self.decode(z), input, mu, log_var]
+        return  [self.decode(z), input, mu, log_var, blond]
 
     def loss_function(self,
                       *args,
@@ -135,17 +137,20 @@ class VAE_REP(BaseVAE):
         input = args[1]
         mu = args[2]
         log_var = args[3]
+        blond_pred = args[4]
+
+        blond_hair_labels = kwargs['labels']
+        criterion = torch.nn.BCEWithLogitsLoss()
 
         kld_weight = kwargs['M_N'] # Account for the minibatch samples from the dataset
-        recons_loss =F.mse_loss(recons, input)
+        recons_loss = F.mse_loss(recons, input)
 
+        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim=1), dim=0)
 
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
+        blond_hair_loss = criterion(blond_pred, blond_hair_labels)
+        loss = blond_hair_loss + recons_loss + kld_weight * kld_loss
 
-        blond_hair_loss = torch.nn.BCEWithLogitsLoss(mu[0], )
-
-        loss = recons_loss + kld_weight * kld_loss
-        return {'loss': loss, 'Reconstruction_Loss':recons_loss.detach(), 'KLD':-kld_loss.detach()}
+        return {'loss': loss,'Blond_Hair_Loss': blond_hair_loss.detach(), 'Reconstruction_Loss': recons_loss.detach(), 'KLD': -kld_loss.detach()}
 
     def sample(self,
                num_samples:int,

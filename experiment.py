@@ -35,11 +35,12 @@ class VAEXperiment(pl.LightningModule):
         real_img, labels = batch
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img, labels=labels)
         train_loss = self.model.loss_function(*results,
-                                              M_N = self.params['kld_weight'], #al_img.shape[0]/ self.num_train_imgs,
+                                              M_N=self.params['kld_weight'], #al_img.shape[0]/ self.num_train_imgs,
+                                              labels=labels,
                                               optimizer_idx=optimizer_idx,
-                                              batch_idx = batch_idx)
+                                              batch_idx=batch_idx)
 
         self.log_dict({key: val.item() for key, val in train_loss.items()}, sync_dist=True)
 
@@ -49,11 +50,12 @@ class VAEXperiment(pl.LightningModule):
         real_img, labels = batch
         self.curr_device = real_img.device
 
-        results = self.forward(real_img, labels = labels)
+        results = self.forward(real_img, labels=labels)
         val_loss = self.model.loss_function(*results,
-                                            M_N = 1.0, #real_img.shape[0]/ self.num_val_imgs,
-                                            optimizer_idx = optimizer_idx,
-                                            batch_idx = batch_idx)
+                                            M_N=1.0,  # real_img.shape[0]/ self.num_val_imgs,
+                                            labels=labels,
+                                            optimizer_idx=optimizer_idx,
+                                            batch_idx=batch_idx)
 
         self.log_dict({f"val_{key}": val.item() for key, val in val_loss.items()}, sync_dist=True)
 
