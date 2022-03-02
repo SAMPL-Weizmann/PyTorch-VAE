@@ -63,7 +63,7 @@ class VAEXperiment(pl.LightningModule):
     def on_validation_end(self) -> None:
         self.sample_images()
         
-    def sample_images(self):
+    def reconstruct(self):
         # Get sample reconstruction image            
         test_input, test_label = next(iter(self.trainer.datamodule.test_dataloader()))
         test_input = test_input.to(self.curr_device)
@@ -78,16 +78,10 @@ class VAEXperiment(pl.LightningModule):
                           normalize=True,
                           nrow=12)
 
+    def sample(self, latent_var, path):
         try:
-            samples = self.model.sample(144,
-                                        self.curr_device,
-                                        labels = test_label)
-            vutils.save_image(samples.cpu().data,
-                              os.path.join(self.logger.log_dir , 
-                                           "Samples",      
-                                           f"{self.logger.name}_Epoch_{self.current_epoch}.png"),
-                              normalize=True,
-                              nrow=12)
+            samples = self.model.sample(50, self.curr_device, latent_var=latent_var)
+            vutils.save_image(samples.cpu().data, os.path.join(path, "samples1.png"), normalize=True, nrow=12)
         except Warning:
             pass
 

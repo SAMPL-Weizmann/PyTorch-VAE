@@ -19,7 +19,7 @@ class BetaVAE_REP(BaseVAE):
                  Capacity_max_iter: int = 1e5,
                  loss_type:str = 'B',
                  **kwargs) -> None:
-        super(BetaVAE, self).__init__()
+        super(BetaVAE_REP, self).__init__()
 
         self.latent_dim = latent_dim
         self.beta = beta
@@ -171,6 +171,8 @@ class BetaVAE_REP(BaseVAE):
         """
         z = torch.randn(num_samples,
                         self.latent_dim)
+        if "latent_var" in kwargs:
+            z[:, 0] = torch.ones_like(z[:, 0]) * kwargs["latent_var"]
 
         z = z.to(current_device)
 

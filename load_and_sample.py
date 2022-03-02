@@ -32,32 +32,14 @@ with open(args.filename, 'r') as file:
 tb_logger = TensorBoardLogger(save_dir=config['logging_params']['save_dir'],
                               name=config['model_params']['name'])
 
-# For reproducibility
-seed_everything(config['exp_params']['manual_seed'], True)
+
+checkpoint_path = ''.join([config['logging_params']['save_dir'], r"VAE_REP/version_3/checkpoints/last.ckpt"])
+checkpoint = torch.load(checkpoint_path)
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
+
 experiment = VAEXperiment(model,
                           config['exp_params'])
+experiment.load_state_dict(checkpoint["state_dict"])
+experiment.sample(latent_var=1, path=config['logging_params']['results_dir'])
 
-data = VAEDataset(**config["data_params"], pin_memory=len(config['trainer_params']['gpus']) != 0)
-
-
-data.setup()
-runner = Trainer(logger=tb_logger,
-                 callbacks=[
-                     LearningRateMonitor(),
-                     ModelCheckpoint(save_top_k=2, 
-                                     dirpath =os.path.join(tb_logger.log_dir , "checkpoints"), 
-                                     monitor= "val_loss",
-                                     save_last= True),
-                 ],
-                 strategy=DDPPlugin(find_unused_parameters=False),
-                 **config['trainer_params'])
-
-
-Path(f"{tb_logger.log_dir}/Samples").mkdir(exist_ok=True, parents=True)
-Path(f"{tb_logger.log_dir}/Reconstructions").mkdir(exist_ok=True, parents=True)
-
-
-print(f"======= Training {config['model_params']['name']} =======")
-runner.fit(experiment, datamodule=data)

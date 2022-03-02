@@ -152,7 +152,7 @@ class VAE_REP(BaseVAE):
         return {'loss': loss,'Blond_Hair_Loss': blond_hair_loss.detach(), 'Reconstruction_Loss': recons_loss.detach(), 'KLD': -kld_loss.detach()}
 
     def sample(self,
-               num_samples:int,
+               num_samples: int,
                current_device: int, **kwargs) -> Tensor:
         """
         Samples from the latent space and return the corresponding
@@ -163,6 +163,8 @@ class VAE_REP(BaseVAE):
         """
         z = torch.randn(num_samples,
                         self.latent_dim)
+        if "latent_var" in kwargs:
+            z[:, 0] = torch.ones_like(z[:, 0]) * kwargs["latent_var"]
 
         z = z.to(current_device)
 
