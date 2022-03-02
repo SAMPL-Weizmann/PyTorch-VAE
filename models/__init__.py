@@ -1,6 +1,7 @@
 from .base import *
 from .vanilla_vae import *
 from .vae_rep import *
+from .beta_vae_rep import *
 from .gamma_vae import *
 from .beta_vae import *
 from .wae_mmd import *
@@ -50,5 +51,6 @@ vae_models = {'HVAE':HVAE,
               'LogCoshVAE':LogCoshVAE,
               'VanillaVAE':VanillaVAE,
               'VAE_REP': VAE_REP,
+              'BetaVAE_REP': BetaVAE_REP,
               'ConditionalVAE':ConditionalVAE,
               'CategoricalVAE':CategoricalVAE}
