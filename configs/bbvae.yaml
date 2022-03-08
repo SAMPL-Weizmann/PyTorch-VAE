@@ -1,5 +1,5 @@
 model_params:
-  name: 'BetaVAE_REP'
+  name: 'BetaVAE'
   in_channels: 3
   latent_dim: 128
   loss_type: 'B'
@@ -27,6 +27,6 @@ trainer_params:
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae_rep/"
+  results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae/"
   manual_seed: 1265
-  name: 'beta_vae_rep_020322'
+  name: 'beta_vae_080322'

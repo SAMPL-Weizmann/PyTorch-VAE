@@ -43,3 +43,5 @@ experiment = VAEXperiment(model,
 experiment.load_state_dict(checkpoint["state_dict"])
 experiment.sample(latent_var=1, path=config['logging_params']['results_dir'])
 
+for i in range(0.0, 1.0, 0.25):
+    experiment.sample(latent_var=i, path=config['logging_params']['results_dir'])
