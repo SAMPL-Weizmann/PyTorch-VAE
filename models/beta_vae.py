@@ -13,7 +13,7 @@ class BetaVAE(BaseVAE):
                  in_channels: int,
                  latent_dim: int,
                  hidden_dims: List = None,
-                 beta: int = 4,
+                 beta: int = 250,
                  gamma:float = 1000.,
                  max_capacity: int = 25,
                  Capacity_max_iter: int = 1e5,
@@ -161,12 +161,19 @@ class BetaVAE(BaseVAE):
         :param current_device: (Int) Device to run the model
         :return: (Tensor)
         """
-        z = torch.randn(num_samples,
-                        self.latent_dim)
 
-        z = z.to(current_device)
+        z = torch.randn(num_samples, self.latent_dim)
 
-        samples = self.decode(z)
+        if "latent_var" in kwargs:
+            samples = []
+            for latent_val in [0.0, 0.25, 0.5, 0.75, 1.0]:
+                z[:, kwargs['latent_var']] = torch.ones_like(z[:, kwargs['latent_var']]) * latent_val
+                z = z.to(current_device)
+                samples.append(((self.decode(z)), latent_val))
+
+        else:
+            z = z.to(current_device)
+            samples = self.decode(z)
         return samples
 
     def generate(self, x: Tensor, **kwargs) -> Tensor:

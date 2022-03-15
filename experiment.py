@@ -106,10 +106,17 @@ class VAEXperiment(pl.LightningModule):
                           normalize=True,
                           nrow=12)
 
-    def sample(self, latent_var, path):
+    def sample(self, change_latent_var, path):
         try:
-            samples = self.model.sample(50, self.curr_device, latent_var=latent_var)
-            vutils.save_image(samples.cpu().data, os.path.join(path, "lat_" + str(latent_var) + ".png"), normalize=True, nrow=12)
+            if change_latent_var:
+                for latent_var in range(8):
+                    samples_list = self.model.sample(50, self.curr_device, latent_var=latent_var)
+                    for samples, lat_val in samples_list:
+                        vutils.save_image(samples.cpu().data, os.path.join(path, "lat_var_" + str(latent_var) +
+                                                                       "lat_val_" + str(lat_val) + ".png"), normalize=True, nrow=12)
+            else:
+                samples = self.model.sample(64, self.curr_device)
+                vutils.save_image(samples.cpu().data, os.path.join(path, "samples.png"), normalize=True, nrow=12)
         except Warning:
             pass
 
