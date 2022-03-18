@@ -110,7 +110,7 @@ class VAEXperiment(pl.LightningModule):
         try:
             if change_latent_var:
                 for latent_var in range(8):
-                    samples_list = self.model.sample(50, self.curr_device, latent_var=latent_var)
+                    samples_list = self.model.sample(8, self.curr_device, latent_var=latent_var)
                     for samples, lat_val in samples_list:
                         vutils.save_image(samples.cpu().data, os.path.join(path, "lat_var_" + str(latent_var) +
                                                                        "lat_val_" + str(lat_val) + ".png"), normalize=True, nrow=12)

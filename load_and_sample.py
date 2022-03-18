@@ -33,7 +33,9 @@ tb_logger = TensorBoardLogger(save_dir=config['logging_params']['save_dir'],
                               name=config['model_params']['name'])
 
 
-checkpoint_path = ''.join([config['logging_params']['save_dir'], r"BetaVAE/version_6/checkpoints/epoch=4-step=12719.ckpt"])
+checkpoint_path = ''.join([config['logging_params']['save_dir'],
+                           r"{model}/version_{version}/checkpoints/last.ckpt".format(model=config['model_params']['name'],
+                                                                                     version=config['logging_params']['version'])])
 checkpoint = torch.load(checkpoint_path)
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
@@ -41,4 +43,7 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 experiment = VAEXperiment(model,
                           config['exp_params'])
 experiment.load_state_dict(checkpoint["state_dict"])
-experiment.sample(change_latent_var=True, path=config['logging_params']['results_dir'] + config['logging_params']['name'] + '/')
+experiment.sample(change_latent_var=True, path=config['logging_params']['results_dir'] + 'version_'
+                                               + str(config['logging_params']['version']) + '/lat_dim_'
+                                               + str(config['model_params']['latent_dim']) + '_beta_'
+                                               + str(config['model_params']['gamma']) + '/')
