@@ -34,16 +34,23 @@ tb_logger = TensorBoardLogger(save_dir=config['logging_params']['save_dir'],
 
 
 checkpoint_path = ''.join([config['logging_params']['save_dir'],
-                           r"{model}/version_{version}/checkpoints/last.ckpt".format(model=config['model_params']['name'],
-                                                                                     version=config['logging_params']['version'])])
+                           r"{model}/version_{version}/checkpoints/{ckpt_file}".format(model=config['model_params']['name'],
+                                                                                     version=config['logging_params']['version'],
+                                                                                       ckpt_file=config['logging_params']['checkpoint'])])
 checkpoint = torch.load(checkpoint_path)
 
 model = vae_models[config['model_params']['name']](**config['model_params'])
 
+save_path = config['logging_params']['results_dir'] + 'version_' + \
+            str(config['logging_params']['version']) + '/lat_dim_' + \
+            str(config['model_params']['latent_dim']) + \
+            '_{param}/'.format(param='gamma_' + str(config['model_params']['gamma'])
+                    if config['model_params']['loss_type'] == 'H' else 'beta_4')
+
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
+
 experiment = VAEXperiment(model,
                           config['exp_params'])
 experiment.load_state_dict(checkpoint["state_dict"])
-experiment.sample(change_latent_var=True, path=config['logging_params']['results_dir'] + 'version_'
-                                               + str(config['logging_params']['version']) + '/lat_dim_'
-                                               + str(config['model_params']['latent_dim']) + '_beta_'
-                                               + str(config['model_params']['gamma']) + '/')
+experiment.sample(change_latent_var=True, path=save_path)

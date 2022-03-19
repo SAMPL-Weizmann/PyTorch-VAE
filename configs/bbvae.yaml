@@ -1,7 +1,7 @@
 model_params:
   name: 'BetaVAE'
   in_channels: 3
-  latent_dim: 64
+  latent_dim: 16
   loss_type: 'H'
   gamma: 100.0
   max_capacity: 25
@@ -27,7 +27,8 @@ trainer_params:
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  version: 12
+  version: 13
+  checkpoint: "epoch=2-step=7631.ckpt"
   results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae/"
   manual_seed: 1265
-  name: 'beta_vae_180322'
+  name: 'beta_vae_190322'
