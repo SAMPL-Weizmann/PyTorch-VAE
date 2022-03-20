@@ -162,7 +162,7 @@ class BetaVAE(BaseVAE):
         :return: (Tensor)
         """
 
-        z = torch.randn(num_samples, self.latent_dim)
+        z = (3 - (-3)) * torch.rand(num_samples, self.latent_dim) + (-3)  # uniform between [-3, 3]
         z = z.to(current_device)
         if "latent_var" in kwargs:
             samples = []

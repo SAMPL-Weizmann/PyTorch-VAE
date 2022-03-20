@@ -125,7 +125,7 @@ class BetaVAE_REP(BaseVAE):
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
         blond = z[:, 0]
-        return  [self.decode(z), input, mu, log_var, blond]
+        return [self.decode(z), input, mu, log_var, blond]
 
     def loss_function(self,
                       *args,
@@ -153,11 +153,11 @@ class BetaVAE_REP(BaseVAE):
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])
-            loss = blond_hair_loss + recons_loss + self.gamma * kld_weight* (kld_loss - C).abs()
+            loss = blond_hair_loss + recons_loss + self.gamma * kld_weight * (kld_loss - C).abs()
         else:
             raise ValueError('Undefined loss type.')
 
-        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss}
+        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'BlondLoss': blond_hair_loss}
 
     def sample(self,
                num_samples:int,
@@ -169,14 +169,17 @@ class BetaVAE_REP(BaseVAE):
         :param current_device: (Int) Device to run the model
         :return: (Tensor)
         """
-        z = torch.randn(num_samples,
-                        self.latent_dim)
-        if "latent_var" in kwargs:
-            z[:, 0] = torch.ones_like(z[:, 0]) * kwargs["latent_var"]
 
+        z = (3 - (-3)) * torch.rand(num_samples, self.latent_dim) + (-3)  # uniform between [-3, 3]
         z = z.to(current_device)
+        if "latent_var" in kwargs:
+            samples = []
+            for latent_val in range(-3, 4):
+                z[:, kwargs['latent_var']] = torch.ones_like(z[:, kwargs['latent_var']]) * latent_val
+                samples.append(((self.decode(z)), latent_val))
 
-        samples = self.decode(z)
+        else:
+            samples = self.decode(z)
         return samples
 
     def generate(self, x: Tensor, **kwargs) -> Tensor:
