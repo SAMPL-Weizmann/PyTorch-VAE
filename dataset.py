@@ -46,7 +46,7 @@ class OxfordPets(Dataset):
                  split: str,
                  transform: Callable,
                 **kwargs):
-        self.data_dir = Path(data_path) / "OxfordPets"        
+        self.data_dir = Path(data_path) / "OxfordPets"
         self.transforms = transform
         imgs = sorted([f for f in self.data_dir.iterdir() if f.suffix == '.jpg'])
         
@@ -61,7 +61,29 @@ class OxfordPets(Dataset):
         if self.transforms is not None:
             img = self.transforms(img)
         
-        return img, 0.0 # dummy datat to prevent breaking 
+        return img, 0.0 # dummy datat to prevent breaking
+
+class CT_Dataset(Dataset):
+    def __init__(self,
+                 data_path: str,
+                 split: str,
+                 transform: Callable,
+                 **kwargs):
+        self.split_str = split + "B"
+        self.data_dir = Path(data_path) / self.split_str
+        self.transforms = transform
+        self.imgs = sorted([f for f in self.data_dir.iterdir() if f.suffix == '.jpg'])
+
+    def __len__(self):
+        len(self.imgs)
+
+    def __getitem__(self, idx):
+        img = default_loader(self.imgs[idx])
+
+        if self.transforms is not None:
+            img = self.transforms(img)
+
+        return img, 0.0 # dummy datat to prevent breaking
 
 class VAEDataset(LightningDataModule):
     """
@@ -136,7 +158,7 @@ class VAEDataset(LightningDataModule):
                                             transforms.Resize(self.patch_size),
                                             transforms.ToTensor(),])
         
-        self.train_dataset = MyCelebA(
+        self.train_dataset = CT_Dataset(
             self.data_dir,
             split='train',
             transform=train_transforms,
@@ -144,7 +166,7 @@ class VAEDataset(LightningDataModule):
         )
         
         # Replace CelebA with your dataset
-        self.val_dataset = MyCelebA(
+        self.val_dataset = CT_Dataset(
             self.data_dir,
             split='test',
             transform=val_transforms,

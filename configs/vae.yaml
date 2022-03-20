@@ -1,11 +1,11 @@
 model_params:
-  name: 'VAE_REP'
+  name: 'VanillaVAE'
   in_channels: 3
   latent_dim: 128
 
 
 data_params:
-  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
+  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/MUNIT/us2ct/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 64
@@ -21,10 +21,10 @@ exp_params:
 
 trainer_params:
   gpus: [0]
-  max_epochs: 50
+  max_epochs: 25
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/vae_rep/"
-  name: "vae_rep_010322"
+  results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/vae/"
+  name: "vae_ct_200322"
   
