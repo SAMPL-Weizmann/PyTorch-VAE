@@ -8,7 +8,7 @@ model_params:
   Capacity_max_iter: 10000
 
 data_params:
-  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
+  data_path: "/home/projects/yonina/SAMPL_training/US2CT/anime_faces/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 64
@@ -31,4 +31,4 @@ logging_params:
   checkpoint: "last.ckpt"
   results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae_rep/"
   manual_seed: 1265
-  name: 'beta_vae_200322'
+  name: 'beta_vae_050422'
