@@ -70,16 +70,16 @@ class VAEXperiment(pl.LightningModule):
         test_label = test_label.to(self.curr_device)
 
         #         test_input, test_label = batch
-        recons = self.model.generate(test_input, labels = test_label)
+        recons = self.model.generate(test_input, labels=test_label)
         vutils.save_image(recons.data,
-                          os.path.join(self.logger.log_dir ,
+                          os.path.join(self.logger.log_dir,
                                        "Reconstructions",
                                        f"recons_{self.logger.name}_Epoch_{self.current_epoch}.png"),
                           normalize=True,
                           nrow=12)
 
         try:
-            samples = self.model.sample(144,
+            samples = self.model.sample(64,
                                         self.curr_device,
                                         labels = test_label)
             vutils.save_image(samples.cpu().data,
@@ -98,10 +98,10 @@ class VAEXperiment(pl.LightningModule):
         test_label = test_label.to(self.curr_device)
 
 #         test_input, test_label = batch
-        recons = self.model.generate(test_input, labels = test_label)
+        recons = self.model.generate(test_input, labels=test_label)
         vutils.save_image(recons.data,
-                          os.path.join(self.logger.log_dir , 
-                                       "Reconstructions", 
+                          os.path.join(self.logger.log_dir,
+                                       "Reconstructions",
                                        f"recons_{self.logger.name}_Epoch_{self.current_epoch}.png"),
                           normalize=True,
                           nrow=12)

@@ -29,11 +29,11 @@ class BetaVAE_REP(BaseVAE):
         self.C_stop_iter = Capacity_max_iter
 
         modules = []
-        if hidden_dims is None:
-            hidden_dims = [32, 64, 128, 256, 512]
+        if self.hidden_dims is None:
+            self.hidden_dims = [32, 64, 128, 256, 512, 1024]
 
         # Build Encoder
-        for h_dim in hidden_dims:
+        for h_dim in self.hidden_dims:
             modules.append(
                 nn.Sequential(
                     nn.Conv2d(in_channels, out_channels=h_dim,
@@ -44,28 +44,26 @@ class BetaVAE_REP(BaseVAE):
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        # for celebA dataset: hidden_dims[-1]*4
-        self.fc_mu = nn.Linear(hidden_dims[-1]*16, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1]*16, latent_dim)
+        self.fc_mu = nn.Linear(self.hidden_dims[-1]*4, latent_dim)
+        self.fc_var = nn.Linear(self.hidden_dims[-1]*4, latent_dim)
 
 
         # Build Decoder
         modules = []
-        # for celebA dataset: hidden_dims[-1]*4
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 16)
+        self.decoder_input = nn.Linear(latent_dim, self.hidden_dims[-1] * 4)
 
-        hidden_dims.reverse()
+        self.hidden_dims.reverse()
 
-        for i in range(len(hidden_dims) - 1):
+        for i in range(len(self.hidden_dims) - 1):
             modules.append(
                 nn.Sequential(
-                    nn.ConvTranspose2d(hidden_dims[i],
-                                       hidden_dims[i + 1],
+                    nn.ConvTranspose2d(self.hidden_dims[i],
+                                       self.hidden_dims[i + 1],
                                        kernel_size=3,
                                        stride=2,
                                        padding=1,
                                        output_padding=1),
-                    nn.BatchNorm2d(hidden_dims[i + 1]),
+                    nn.BatchNorm2d(self.hidden_dims[i + 1]),
                     nn.LeakyReLU())
             )
 
@@ -74,15 +72,15 @@ class BetaVAE_REP(BaseVAE):
         self.decoder = nn.Sequential(*modules)
 
         self.final_layer = nn.Sequential(
-            nn.ConvTranspose2d(hidden_dims[-1],
-                               hidden_dims[-1],
+            nn.ConvTranspose2d(self.hidden_dims[-1],
+                               self.hidden_dims[-1],
                                kernel_size=3,
                                stride=2,
                                padding=1,
                                output_padding=1),
-            nn.BatchNorm2d(hidden_dims[-1]),
+            nn.BatchNorm2d(self.hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_dims[-1], out_channels=3,
+            nn.Conv2d(self.hidden_dims[-1], out_channels=3,
                       kernel_size=3, padding=1),
             nn.Tanh())
 
@@ -105,8 +103,7 @@ class BetaVAE_REP(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        # celebA dataset: result = result.view(-1, 512, 2, 2)
-        result = result.view(-1, 512, 4, 4)
+        result = result.view(-1, self.hidden_dims[-1], 2, 2)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -155,7 +152,7 @@ class BetaVAE_REP(BaseVAE):
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = blond_hair_loss + recons_loss + self.beta * kld_weight * kld_loss
+            loss = blond_hair_loss + (10 * recons_loss) + (self.beta * kld_weight * kld_loss)
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])

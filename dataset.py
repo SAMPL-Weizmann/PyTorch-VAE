@@ -185,7 +185,7 @@ class VAEDataset(LightningDataModule):
     def test_dataloader(self) -> Union[DataLoader, List[DataLoader]]:
         return DataLoader(
             self.val_dataset,
-            batch_size=144,
+            batch_size=64,
             num_workers=self.num_workers,
             shuffle=True,
             pin_memory=self.pin_memory,
