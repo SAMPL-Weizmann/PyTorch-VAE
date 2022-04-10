@@ -37,21 +37,22 @@ class BetaVAE_REP(BaseVAE):
             modules.append(
                 nn.Sequential(
                     nn.Conv2d(in_channels, out_channels=h_dim,
-                              kernel_size= 3, stride= 2, padding  = 1),
+                              kernel_size=3, stride=2, padding=1),
                     nn.BatchNorm2d(h_dim),
                     nn.LeakyReLU())
             )
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(hidden_dims[-1]*4, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1]*4, latent_dim)
+        # for celebA dataset: hidden_dims[-1]*4
+        self.fc_mu = nn.Linear(hidden_dims[-1]*16, latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1]*16, latent_dim)
 
 
         # Build Decoder
         modules = []
-
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 4)
+        # for celebA dataset: hidden_dims[-1]*4
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 16)
 
         hidden_dims.reverse()
 
@@ -61,7 +62,7 @@ class BetaVAE_REP(BaseVAE):
                     nn.ConvTranspose2d(hidden_dims[i],
                                        hidden_dims[i + 1],
                                        kernel_size=3,
-                                       stride = 2,
+                                       stride=2,
                                        padding=1,
                                        output_padding=1),
                     nn.BatchNorm2d(hidden_dims[i + 1]),
@@ -81,8 +82,8 @@ class BetaVAE_REP(BaseVAE):
                                output_padding=1),
             nn.BatchNorm2d(hidden_dims[-1]),
             nn.LeakyReLU(),
-            nn.Conv2d(hidden_dims[-1], out_channels= 3,
-                      kernel_size= 3, padding= 1),
+            nn.Conv2d(hidden_dims[-1], out_channels=3,
+                      kernel_size=3, padding=1),
             nn.Tanh())
 
     def encode(self, input: Tensor) -> List[Tensor]:
@@ -104,7 +105,8 @@ class BetaVAE_REP(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 2, 2)
+        # celebA dataset: result = result.view(-1, 512, 2, 2)
+        result = result.view(-1, 512, 4, 4)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -137,14 +139,18 @@ class BetaVAE_REP(BaseVAE):
         log_var = args[3]
         blond_pred = args[4]
 
-        blond_hair_labels = kwargs['labels'][:, 9].float()
+        # for celeba
+        # blond_hair_labels = kwargs['labels'][:, 9].float()
+
+        # for anime
+        blond_hair_labels = kwargs['labels'].float()
         criterion = torch.nn.BCEWithLogitsLoss()
         blond_hair_loss = criterion(blond_pred, blond_hair_labels)
 
 
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
-        recons_loss =F.mse_loss(recons, input)
+        recons_loss = F.mse_loss(recons, input)
 
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 

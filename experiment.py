@@ -31,7 +31,7 @@ class VAEXperiment(pl.LightningModule):
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         return self.model(input, **kwargs)
 
-    def training_step(self, batch, batch_idx, optimizer_idx = 0):
+    def training_step(self, batch, batch_idx, optimizer_idx=0):
         real_img, labels = batch
         self.curr_device = real_img.device
 

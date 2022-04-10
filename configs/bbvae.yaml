@@ -11,7 +11,7 @@ data_params:
   data_path: "/home/projects/yonina/SAMPL_training/US2CT/anime_faces/"
   train_batch_size: 64
   val_batch_size:  64
-  patch_size: 64
+  patch_size: 128
   num_workers: 4
   
 exp_params:

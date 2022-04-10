@@ -100,13 +100,13 @@ class VAEDataset(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         # =========================  Anime Faces Dataset  =========================
-        train_transforms = transforms.Compose([transforms.Resize(self.patch_size),
+        train_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
                                                transforms.ToTensor(),
-                                               transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                               transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
 
-        val_transforms = transforms.Compose([transforms.Resize(self.patch_size),
+        val_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
                                              transforms.ToTensor(),
-                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))])
+                                             transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
 
         self.train_dataset = datasets.ImageFolder(root=self.data_dir, transform=train_transforms)
         self.val_dataset = datasets.ImageFolder(root=self.data_dir, transform=val_transforms)
