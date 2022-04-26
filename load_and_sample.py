@@ -44,8 +44,6 @@ model = vae_models[config['model_params']['name']](**config['model_params'])
 save_path = config['logging_params']['results_dir'] + 'version_' + \
             str(config['logging_params']['version']) + '_lat_dim_' + \
             str(config['model_params']['latent_dim']) + \
-            '_{param}/'.format(param='gamma_' + str(config['model_params']['gamma'])
-                    if config['model_params']['loss_type'] == 'B' else 'beta_4') + \
             "{checkpoint}/".format(checkpoint=config['logging_params']['checkpoint'])
 
 if not os.path.exists(save_path):

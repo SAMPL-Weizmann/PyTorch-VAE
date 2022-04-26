@@ -1,12 +1,13 @@
 model_params:
-  name: 'WAE_MMD'
+  name: 'WAE_MMD_REP'
   in_channels: 3
   latent_dim: 128
   reg_weight: 5000
   kernel_type: 'rbf'
+  recon_factor: 10
 
 data_params:
-  data_path: "Data/"
+  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 64
@@ -21,11 +22,14 @@ exp_params:
   manual_seed: 1265
 
 trainer_params:
-  gpus: [1]
+  gpus: [0]
   max_epochs: 10
 
 logging_params:
-  save_dir: "logs/"
+  save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
+  version: 2
+  checkpoint: "epoch=7-step=20351.ckpt"
+  results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/wae_mmd_rep/"
   name: "WassersteinVAE_RBF"
 
 

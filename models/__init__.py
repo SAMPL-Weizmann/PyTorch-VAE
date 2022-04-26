@@ -5,6 +5,7 @@ from .beta_vae_rep import *
 from .gamma_vae import *
 from .beta_vae import *
 from .wae_mmd import *
+from .wae_mmd_rep import *
 from .cvae import *
 from .hvae import *
 from .vampvae import *
@@ -42,6 +43,7 @@ vae_models = {'HVAE':HVAE,
               'BetaVAE':BetaVAE,
               'InfoVAE':InfoVAE,
               'WAE_MMD':WAE_MMD,
+              'WAE_MMD_REP':WAE_MMD_REP,
               'VampVAE': VampVAE,
               'GammaVAE':GammaVAE,
               'MSSIMVAE':MSSIMVAE,
