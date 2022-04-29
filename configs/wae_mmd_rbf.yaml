@@ -27,7 +27,7 @@ trainer_params:
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  version: 2
+  version: 5
   checkpoint: "epoch=7-step=20351.ckpt"
   results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/wae_mmd_rep/"
   name: "WassersteinVAE_RBF"

@@ -22,6 +22,7 @@ class BetaVAE_REP(BaseVAE):
         super(BetaVAE_REP, self).__init__()
 
         self.latent_dim = latent_dim
+        self.hidden_dims = hidden_dims
         self.beta = beta
         self.gamma = gamma
         self.loss_type = loss_type
@@ -30,7 +31,7 @@ class BetaVAE_REP(BaseVAE):
 
         modules = []
         if self.hidden_dims is None:
-            self.hidden_dims = [32, 64, 128, 256, 512, 1024]
+            self.hidden_dims = [16, 32, 64, 128, 256, 512]
 
         # Build Encoder
         for h_dim in self.hidden_dims:
@@ -103,7 +104,7 @@ class BetaVAE_REP(BaseVAE):
 
     def decode(self, z: Tensor) -> Tensor:
         result = self.decoder_input(z)
-        result = result.view(-1, self.hidden_dims[-1], 2, 2)
+        result = result.view(-1, 512, 2, 2)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -152,7 +153,7 @@ class BetaVAE_REP(BaseVAE):
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = blond_hair_loss + (10 * recons_loss) + (self.beta * kld_weight * kld_loss)
+            loss = blond_hair_loss + (200 * recons_loss) + (self.beta * kld_weight * kld_loss)
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])
