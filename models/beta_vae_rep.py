@@ -28,6 +28,7 @@ class BetaVAE_REP(BaseVAE):
         self.loss_type = loss_type
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
+        self.classifiers = None
 
         modules = []
         if self.hidden_dims is None:
@@ -139,11 +140,22 @@ class BetaVAE_REP(BaseVAE):
 
         # for celeba
         # blond_hair_labels = kwargs['labels'][:, 9].float()
+        attr_list = []
+        for i in range(40):
+            attr_list.append(kwargs['labels'][:, i].float())
+        attr_tnsr = torch.tensor(attr_list)
+
+        cls_list = []
+        for i in range(40):
+            cls_list.append(torch.nn.BCEWithLogitsLoss())
+        self.classifiers = torch.nn.ModuleList(cls_list)
 
         # for anime
-        blond_hair_labels = kwargs['labels'].float()
-        criterion = torch.nn.BCEWithLogitsLoss()
-        blond_hair_loss = criterion(blond_pred, blond_hair_labels)
+        # blond_hair_labels = kwargs['labels'].float()
+        # criterion = torch.nn.BCEWithLogitsLoss()
+        # blond_hair_loss = criterion(blond_pred, blond_hair_labels)
+
+        attr_loss = [self.classifiers[i](attr_tnsr[:, i]) for i in range(40)]
 
 
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset

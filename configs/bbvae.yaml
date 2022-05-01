@@ -1,14 +1,14 @@
 model_params:
   name: 'BetaVAE_REP'
   in_channels: 3
-  latent_dim: 16
+  latent_dim: 40
   loss_type: 'H'
   gamma: 100.0
   max_capacity: 25
   Capacity_max_iter: 10000
 
 data_params:
-  data_path: "/home/projects/yonina/SAMPL_training/US2CT/anime_faces/"
+  data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 128
@@ -27,7 +27,7 @@ trainer_params:
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  version: 66
+  version: 10
   checkpoint: "epoch=18-step=4255.ckpt"
   results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae_rep/"
   manual_seed: 1265

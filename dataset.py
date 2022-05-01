@@ -100,16 +100,16 @@ class VAEDataset(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None) -> None:
         # =========================  Anime Faces Dataset  =========================
-        train_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
-                                               transforms.ToTensor(),
-                                               transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
-
-        val_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
-                                             transforms.ToTensor(),
-                                             transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
-
-        self.train_dataset = datasets.ImageFolder(root=self.data_dir, transform=train_transforms)
-        self.val_dataset = datasets.ImageFolder(root=self.data_dir, transform=val_transforms)
+        # train_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
+        #                                        transforms.ToTensor(),
+        #                                        transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
+        #
+        # val_transforms = transforms.Compose([transforms.Resize(size=(self.patch_size, self.patch_size)),
+        #                                      transforms.ToTensor(),
+        #                                      transforms.Normalize((0.6655, 0.5840, 0.5663), (0.3002, 0.3022, 0.2989))])
+        #
+        # self.train_dataset = datasets.ImageFolder(root=self.data_dir, transform=train_transforms)
+        # self.val_dataset = datasets.ImageFolder(root=self.data_dir, transform=val_transforms)
         #       =========================  OxfordPets Dataset  =========================
 
         #         train_transforms = transforms.Compose([transforms.RandomHorizontalFlip(),
@@ -138,30 +138,30 @@ class VAEDataset(LightningDataModule):
 
         #       =========================  CelebA Dataset  =========================
 
-        # train_transforms = transforms.Compose([transforms.RandomHorizontalFlip(),
-        #                                       transforms.CenterCrop(148),
-        #                                       transforms.Resize(self.patch_size),
-        #                                       transforms.ToTensor()])
-        #
-        # val_transforms = transforms.Compose([transforms.RandomHorizontalFlip(),
-        #                                     transforms.CenterCrop(148),
-        #                                     transforms.Resize(self.patch_size),
-        #                                     transforms.ToTensor()])
-        #
-        # self.train_dataset = MyCelebA(
-        #     self.data_dir,
-        #     split='train',
-        #     transform=train_transforms,
-        #     download=False,
-        # )
-        #
-        # # Replace CelebA with your dataset
-        # self.val_dataset = MyCelebA(
-        #     self.data_dir,
-        #     split='test',
-        #     transform=val_transforms,
-        #     download=False,
-        # )
+        train_transforms = transforms.Compose([transforms.RandomHorizontalFlip(),
+                                              transforms.CenterCrop(148),
+                                              transforms.Resize(self.patch_size),
+                                              transforms.ToTensor()])
+
+        val_transforms = transforms.Compose([transforms.RandomHorizontalFlip(),
+                                            transforms.CenterCrop(148),
+                                            transforms.Resize(self.patch_size),
+                                            transforms.ToTensor()])
+
+        self.train_dataset = MyCelebA(
+            self.data_dir,
+            split='train',
+            transform=train_transforms,
+            download=False,
+        )
+
+        # Replace CelebA with your dataset
+        self.val_dataset = MyCelebA(
+            self.data_dir,
+            split='test',
+            transform=val_transforms,
+            download=False,
+        )
     #       ===============================================================
 
     def train_dataloader(self) -> DataLoader:
