@@ -28,7 +28,6 @@ class BetaVAE_REP(BaseVAE):
         self.loss_type = loss_type
         self.C_max = torch.Tensor([max_capacity])
         self.C_stop_iter = Capacity_max_iter
-        self.classifiers = None
 
         modules = []
         if self.hidden_dims is None:
@@ -125,8 +124,8 @@ class BetaVAE_REP(BaseVAE):
     def forward(self, input: Tensor, **kwargs) -> Tensor:
         mu, log_var = self.encode(input)
         z = self.reparameterize(mu, log_var)
-        blond = z[:, 0]
-        return [self.decode(z), input, mu, log_var, blond]
+        # blond = z[:, 0]
+        return [self.decode(z), input, mu, log_var, z]
 
     def loss_function(self,
                       *args,
@@ -136,27 +135,21 @@ class BetaVAE_REP(BaseVAE):
         input = args[1]
         mu = args[2]
         log_var = args[3]
-        blond_pred = args[4]
+        z = args[4]
 
         # for celeba
         # blond_hair_labels = kwargs['labels'][:, 9].float()
         attr_list = []
-        for i in range(40):
+        for i in range(self.latent_dim):
             attr_list.append(kwargs['labels'][:, i].float())
-        attr_tnsr = torch.tensor(attr_list)
-
-        cls_list = []
-        for i in range(40):
-            cls_list.append(torch.nn.BCEWithLogitsLoss())
-        self.classifiers = torch.nn.ModuleList(cls_list)
 
         # for anime
         # blond_hair_labels = kwargs['labels'].float()
-        # criterion = torch.nn.BCEWithLogitsLoss()
+
+        criterion = torch.nn.BCEWithLogitsLoss()
         # blond_hair_loss = criterion(blond_pred, blond_hair_labels)
 
-        attr_loss = [self.classifiers[i](attr_tnsr[:, i]) for i in range(40)]
-
+        attr_loss = sum([criterion(z[:, i], attr_list[i]) for i in range(self.latent_dim)])
 
         kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
 
@@ -165,15 +158,15 @@ class BetaVAE_REP(BaseVAE):
         kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = blond_hair_loss + (200 * recons_loss) + (self.beta * kld_weight * kld_loss)
+            loss = (attr_loss / (0.5 * self.latent_dim)) + recons_loss + (self.beta * kld_weight * kld_loss)
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])
-            loss = blond_hair_loss + recons_loss + self.gamma * kld_weight * (kld_loss - C).abs()
+            loss = attr_loss + recons_loss + self.gamma * kld_weight * (kld_loss - C).abs()
         else:
             raise ValueError('Undefined loss type.')
 
-        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'BlondLoss': blond_hair_loss}
+        return {'loss': loss, 'Reconstruction_Loss':recons_loss, 'KLD':kld_loss, 'AttrLoss': attr_loss}
 
     def sample(self,
                num_samples:int,
