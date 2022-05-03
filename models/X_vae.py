@@ -5,13 +5,15 @@ from torch.nn import functional as F
 from .types_ import *
 
 
-class BetaVAE_REP(BaseVAE):
+class XrepVAE(BaseVAE):
 
     num_iter = 0 # Global static variable to keep track of iterations
 
     def __init__(self,
                  in_channels: int,
-                 latent_dim: int,
+                 num_features: int,
+                 content_added_dim: int,
+                 style_added_dim: int,
                  hidden_dims: List = None,
                  beta: int = 4,
                  gamma:float = 1000.,
@@ -20,9 +22,11 @@ class BetaVAE_REP(BaseVAE):
                  loss_type:str = 'B',
                  attr_weight: int = 0.5,
                  **kwargs) -> None:
-        super(BetaVAE_REP, self).__init__()
+        super(XrepVAE, self).__init__()
 
-        self.latent_dim = latent_dim
+        self.num_features = num_features
+        self.content_latent_dim = num_features - 1 + content_added_dim
+        self.style_latent_dim = 1 + style_added_dim
         self.hidden_dims = hidden_dims
         self.beta = beta
         self.gamma = gamma
@@ -35,7 +39,7 @@ class BetaVAE_REP(BaseVAE):
         if self.hidden_dims is None:
             self.hidden_dims = [16, 32, 64, 128, 256, 512]
 
-        # Build Encoder
+        # Build Content Encoder
         for h_dim in self.hidden_dims:
             modules.append(
                 nn.Sequential(
@@ -46,14 +50,19 @@ class BetaVAE_REP(BaseVAE):
             )
             in_channels = h_dim
 
-        self.encoder = nn.Sequential(*modules)
-        self.fc_mu = nn.Linear(self.hidden_dims[-1]*4, latent_dim)
-        self.fc_var = nn.Linear(self.hidden_dims[-1]*4, latent_dim)
+        self.content_encoder = nn.Sequential(*modules)
+        self.content_fc_mu = nn.Linear(self.hidden_dims[-1]*4, self.content_latent_dim)
+        self.content_fc_var = nn.Linear(self.hidden_dims[-1]*4, self.content_latent_dim)
+
+        # Build Style Encoder
+        self.style_encoder = nn.Sequential(*modules)
+        self.style_fc_mu = nn.Linear(self.hidden_dims[-1]*4, self.style_latent_dim)
+        self.style_fc_var = nn.Linear(self.hidden_dims[-1]*4, self.style_latent_dim)
 
 
         # Build Decoder
         modules = []
-        self.decoder_input = nn.Linear(latent_dim, self.hidden_dims[-1] * 4)
+        self.decoder_input = nn.Linear(self.content_latent_dim + self.style_latent_dim, self.hidden_dims[-1] * 4)
 
         self.hidden_dims.reverse()
 
@@ -87,21 +96,23 @@ class BetaVAE_REP(BaseVAE):
                       kernel_size=3, padding=1),
             nn.Tanh())
 
-    def encode(self, input: Tensor) -> List[Tensor]:
+    def encode(self, input: Tensor, encoder: str = 'content') -> List[Tensor]:
         """
         Encodes the input by passing through the encoder network
         and returns the latent codes.
         :param input: (Tensor) Input tensor to encoder [N x C x H x W]
         :return: (Tensor) List of latent codes
         """
-        result = self.encoder(input)
-        result = torch.flatten(result, start_dim=1)
-
-        # Split the result into mu and var components
-        # of the latent Gaussian distribution
-        mu = self.fc_mu(result)
-        log_var = self.fc_var(result)
-
+        if encoder == 'content':
+            result = self.content_encoder(input)
+            result = torch.flatten(result, start_dim=1)
+            mu = self.content_fc_mu(result)
+            log_var = self.content_fc_var(result)
+        elif encoder == 'style':
+            result = self.style_encoder(input)
+            result = torch.flatten(result, start_dim=1)
+            mu = self.style_fc_mu(result)
+            log_var = self.style_fc_var(result)
         return [mu, log_var]
 
     def decode(self, z: Tensor) -> Tensor:
@@ -124,10 +135,13 @@ class BetaVAE_REP(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> Tensor:
-        mu, log_var = self.encode(input)
-        z = self.reparameterize(mu, log_var)
-        # blond = z[:, 0]
-        return [self.decode(z), input, mu, log_var, z]
+        content_mu, content_log_var = self.encode(input, "content")
+        content_z = self.reparameterize(content_mu, content_log_var)
+
+        style_mu, style_log_var = self.encode(input, "style")
+        style_z = self.reparameterize(style_mu, style_log_var)
+        z = torch.cat((content_z, style_z), 0)
+        return [self.decode(z), input, content_mu, content_log_var, style_mu, style_log_var, z]
 
     def loss_function(self,
                       *args,
@@ -135,32 +149,41 @@ class BetaVAE_REP(BaseVAE):
         self.num_iter += 1
         recons = args[0]
         input = args[1]
-        mu = args[2]
-        log_var = args[3]
-        z = args[4]
+        content_mu = args[2]
+        content_log_var = args[3]
+        style_mu = args[4]
+        style_log_var = args[5]
+        z = args[6]
 
-        # for celeba
-        # blond_hair_labels = kwargs['labels'][:, 9].float()
+        # attribute loss
         attr_list = []
-        for i in range(self.latent_dim):
+        for i in range(self.num_featurs):
+            if i == 20:  # Male attribute:
+                continue
             attr_list.append(kwargs['labels'][:, i].float())
+        assert len(attr_list) == self.num_features - 1
 
-        # for anime
-        # blond_hair_labels = kwargs['labels'].float()
+        content_criterion = torch.nn.BCEWithLogitsLoss()
+        style_criterion = torch.nn.BCEWithLogitsLoss()
 
-        criterion = torch.nn.BCEWithLogitsLoss()
-        # blond_hair_loss = criterion(blond_pred, blond_hair_labels)
+        content_attr_loss = sum([content_criterion(z[:, i], attr_list[i]) for i in range(self.latent_dim)])
+        style_attr_loss = [style_criterion(z[:, 20], kwargs['labels'][:, 20].float()) for i in range(self.latent_dim)]
+        attr_loss = content_attr_loss + style_attr_loss
 
-        attr_loss = sum([criterion(z[:, i], attr_list[i]) for i in range(self.latent_dim)])
-
-        kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
-
+        # reconstruction loss
         recons_loss = F.mse_loss(recons, input)
 
-        kld_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
+        # kld loss
+        kld_weight = kwargs['M_N']  # Account for the minibatch samples from the dataset
+        content_kld_loss = torch.mean(-0.5 * torch.sum(1 + content_log_var - content_mu ** 2 - content_log_var.exp(),
+                                                       dim=1), dim=0)
+        style_kld_loss = torch.mean(-0.5 * torch.sum(1 + style_log_var - style_mu ** 2 - style_log_var.exp(), dim=1),
+                                    dim=0)
+        kld_loss = content_kld_loss + style_kld_loss
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = (attr_loss / (self.attr_weight * self.latent_dim)) + recons_loss + (self.beta * kld_weight * kld_loss)
+            loss = (attr_loss / (self.attr_weight * self.latent_dim)) + recons_loss + (
+                        self.beta * kld_weight * kld_loss)
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])

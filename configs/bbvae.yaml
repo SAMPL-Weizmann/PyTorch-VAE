@@ -1,18 +1,21 @@
 model_params:
   name: 'BetaVAE_REP'
   in_channels: 3
-  latent_dim: 40
+  num_features: 40
   loss_type: 'H'
   gamma: 100.0
   max_capacity: 25
   Capacity_max_iter: 10000
+  attr_weight: 1
+  content_added_dim: 10,
+  style_added_dim: 10,
 
 data_params:
   data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
   train_batch_size: 64
   val_batch_size:  64
   patch_size: 128
-  num_workers: 0
+  num_workers: 4
   
 exp_params:
   LR: 0.005
@@ -27,8 +30,8 @@ trainer_params:
 
 logging_params:
   save_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/checkpoints/VAE/"
-  version: 72
-  checkpoint: "last.ckpt"
+  version: 73
+  checkpoint: "epoch=4-step=12719.ckpt"
   results_dir: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/results/vae/beta_vae_rep/"
   manual_seed: 1265
   name: 'beta_vae_050422'
