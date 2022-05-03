@@ -140,7 +140,7 @@ class XrepVAE(BaseVAE):
 
         style_mu, style_log_var = self.encode(input, "style")
         style_z = self.reparameterize(style_mu, style_log_var)
-        z = torch.cat((content_z, style_z), 0)
+        z = torch.cat((content_z, style_z), 1)
         return [self.decode(z), input, content_mu, content_log_var, style_mu, style_log_var, z]
 
     def loss_function(self,
@@ -157,7 +157,7 @@ class XrepVAE(BaseVAE):
 
         # attribute loss
         attr_list = []
-        for i in range(self.num_featurs):
+        for i in range(self.num_features):
             if i == 20:  # Male attribute:
                 continue
             attr_list.append(kwargs['labels'][:, i].float())
@@ -166,8 +166,8 @@ class XrepVAE(BaseVAE):
         content_criterion = torch.nn.BCEWithLogitsLoss()
         style_criterion = torch.nn.BCEWithLogitsLoss()
 
-        content_attr_loss = sum([content_criterion(z[:, i], attr_list[i]) for i in range(self.latent_dim)])
-        style_attr_loss = [style_criterion(z[:, 20], kwargs['labels'][:, 20].float()) for i in range(self.latent_dim)]
+        content_attr_loss = sum([content_criterion(z[:, i], attr_list[i]) for i in range(len(attr_list))])
+        style_attr_loss = style_criterion(z[:, 39], kwargs['labels'][:, 20].float())
         attr_loss = content_attr_loss + style_attr_loss
 
         # reconstruction loss
@@ -182,8 +182,8 @@ class XrepVAE(BaseVAE):
         kld_loss = content_kld_loss + style_kld_loss
 
         if self.loss_type == 'H': # https://openreview.net/forum?id=Sy2fzU9gl
-            loss = (attr_loss / (self.attr_weight * self.latent_dim)) + recons_loss + (
-                        self.beta * kld_weight * kld_loss)
+            loss = (attr_loss / (self.attr_weight * (self.content_latent_dim + self.style_latent_dim)))\
+                   + recons_loss + (self.beta * kld_weight * kld_loss)
         elif self.loss_type == 'B': # https://arxiv.org/pdf/1804.03599.pdf
             self.C_max = self.C_max.to(input.device)
             C = torch.clamp(self.C_max/self.C_stop_iter * self.num_iter, 0, self.C_max.data[0])
@@ -204,7 +204,8 @@ class XrepVAE(BaseVAE):
         :return: (Tensor)
         """
 
-        z = (3 - (-3)) * torch.rand(num_samples, self.latent_dim) + (-3)  # uniform between [-3, 3]
+        # uniform between [-3, 3]
+        z = (3 - (-3)) * torch.rand(num_samples, self.content_latent_dim + self.style_latent_dim) + (-3)
         z = z.to(current_device)
         if "latent_var" in kwargs:
             samples = []

@@ -1,5 +1,6 @@
 model_params:
-  name: 'BetaVAE_REP'
+  name: 'XrepVAE'
+  latent_dim: 16
   in_channels: 3
   num_features: 40
   loss_type: 'H'
@@ -7,8 +8,8 @@ model_params:
   max_capacity: 25
   Capacity_max_iter: 10000
   attr_weight: 1
-  content_added_dim: 10,
-  style_added_dim: 10,
+  content_added_dim: 10
+  style_added_dim: 10
 
 data_params:
   data_path: "/home/nih/nih-elda-var/Studies_under_Helsinki_approval/Emek_US_to_CT_Dr_Elik_Aharony/datasets/VAE/"
